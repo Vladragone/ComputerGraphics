@@ -6,5 +6,3 @@ def check_find_min_dif_square():
     print(res)
 
 check_find_min_dif_square()
-print("hello")
-print(1)
