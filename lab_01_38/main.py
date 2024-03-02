@@ -69,7 +69,8 @@ class MainWindow(QMainWindow):
             if abs(point[0] - x) < EPSILON and abs(point[1] - y) < EPSILON:
                 QMessageBox.warning(self, "Ошибка!", "Такая точка уже есть на графике")
                 return
-
+        x = round(x, 3)
+        y = round(y, 3)
         self.points.append((x, y))
         self.updatePlot()
         self.updatePointList()
@@ -104,6 +105,8 @@ class MainWindow(QMainWindow):
             pos = event.pos()
             pos = self.graphWidget.plotItem.vb.mapSceneToView(pos)
             x, y = pos.x(), pos.y()
+            x = round(x, 3)
+            y = round(y, 3)
             self.points.append((x, y))
             self.updatePlot()
             self.updatePointList()

@@ -15,23 +15,26 @@ def find_min_dif_square(points):
 
     p = (side1 + side2 + side3) / 2
     # Вычисляем длины биссектрис треугольника
-    l_a = (2 * (side2 * side3 * p * (p - side1)) ** 0.5) / (side2 + side3)
-    l_b = (2 * (side1 * side3 * p * (p - side2)) ** 0.5) / (side1 + side3)
-    l_c = (2 * (side1 * side2 * p * (p - side3)) ** 0.5) / (side1 + side2)
-    # Вычисляем длину первой и второй части каждой биссектрисы относительно точки пересечения
-    l_a_second = l_a / ((side2 + side3) / side1 + 1)
-    l_a_first = l_a - l_a_second
-    l_b_second = l_b / ((side1 + side3) / side2 + 1)
-    l_b_first = l_b - l_b_second
-    l_c_second = l_c / ((side1 + side2) / side3 + 1)
-    l_c_first = l_c - l_c_second
-    # Вычисляем длину первой и второй части каждой стороны относительно точки, куда падает биссектриса
-    side1_second = side1 / (side3 / side2 + 1)
-    side1_first = side1 - side1_second
-    side2_second = side2 / (side1 / side3 + 1)
-    side2_first = side2 - side2_second
-    side3_second = side3 / (side1 / side2 + 1)
-    side3_first = side3 - side3_second
+    try:
+        l_a = (2 * (side2 * side3 * p * (p - side1)) ** 0.5) / (side2 + side3)
+        l_b = (2 * (side1 * side3 * p * (p - side2)) ** 0.5) / (side1 + side3)
+        l_c = (2 * (side1 * side2 * p * (p - side3)) ** 0.5) / (side1 + side2)
+        # Вычисляем длину первой и второй части каждой биссектрисы относительно точки пересечения
+        l_a_second = l_a / ((side2 + side3) / side1 + 1)
+        l_a_first = l_a - l_a_second
+        l_b_second = l_b / ((side1 + side3) / side2 + 1)
+        l_b_first = l_b - l_b_second
+        l_c_second = l_c / ((side1 + side2) / side3 + 1)
+        l_c_first = l_c - l_c_second
+        # Вычисляем длину первой и второй части каждой стороны относительно точки, куда падает биссектриса
+        side1_second = side1 / (side3 / side2 + 1)
+        side1_first = side1 - side1_second
+        side2_second = side2 / (side1 / side3 + 1)
+        side2_first = side2 - side2_second
+        side3_second = side3 / (side1 / side2 + 1)
+        side3_first = side3 - side3_second
+    except:
+        return math.inf
     # Считаем каждую площадь
     s1 = area_triangle(l_c_second, side3_first, l_b_first)
     s2 = area_triangle(l_c_second, side3_second, l_a_first)
