@@ -2,7 +2,7 @@ import sys
 from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QPushButton, QLineEdit, QListWidget, QMessageBox
 from pyqtgraph import PlotWidget
 from pyqtgraph.Qt import QtCore
-from find_triangle import find_min_dif_square, find_points_in_lines
+from find_triangle import find_min_dif_square
 import itertools
 import math
 import os
@@ -181,12 +181,7 @@ class MainWindow(QMainWindow):
                 x1, y1 = cur_points[i]
                 x2, y2 = cur_points[(i + 1) % 3]
                 self.graphWidget.plot([x1, x2], [y1, y2], pen='g')
-            # Следующие 4 строки - команды для отрисовки бисскектрис. Занимает это продолжительное время (5-10 секунд), поэтому раскоментируйте, если это необходимо.
-            point1, point2, point3 = find_points_in_lines(cur_points)
-            self.graphWidget.plot([cur_points[0][0], float(point1[0][0])], [cur_points[0][1], float(point1[0][1])], pen='r')
-            self.graphWidget.plot([cur_points[1][0], float(point2[0][0])], [cur_points[1][1], float(point2[0][1])], pen='r')
-            self.graphWidget.plot([cur_points[2][0], float(point3[0][0])], [cur_points[2][1], float(point3[0][1])], pen='r')
-            
+
             QMessageBox.warning(self, "Задача решена!", f"Треугольник, у которого разница площадей минимальна - треугольник в вершинах {cur_points}")
             
 if __name__ == '__main__':

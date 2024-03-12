@@ -1,4 +1,3 @@
-from sympy import Triangle, Line
 import math
 def area_triangle(a, b, c):
     s = (a + b + c) / 2
@@ -68,26 +67,3 @@ def find_min_dif_square(points):
     s6 = area_triangle(l_a_second, side1_first, l_b_first)
 
     return max(s1,s2,s3,s4,s5,s6) - min(s1,s2,s3,s4,s5,s6)
-
-def find_points_in_lines(cur_points):
-
-    triangle = Triangle(cur_points[0], cur_points[1], cur_points[2])
-    incircle = triangle.incircle
-
-    # Находим центр и радиус вписанной окружности
-    center = incircle.center
-
-    # Находим уравнения биссектрис
-    bis1 = Line(cur_points[0], center)
-    bis2 = Line(cur_points[1], center)
-    bis3 = Line(cur_points[2], center)
-
-    # Находим уравнение прямой для каждой стороны треугольника
-    side1 = Line(cur_points[0], cur_points[1])
-    side2 = Line(cur_points[1], cur_points[2])
-    side3 = Line(cur_points[0], cur_points[2])
-    # Находим точку пересечения биссектрисы с стороной
-    point1 = bis1.intersection(side2)
-    point2 = bis2.intersection(side3)
-    point3 = bis3.intersection(side1)
-    return point1, point2, point3
