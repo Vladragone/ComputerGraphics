@@ -2,8 +2,10 @@ import sys
 from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QPushButton, QLineEdit, QListWidget, QMessageBox
 from pyqtgraph import PlotWidget
 from pyqtgraph.Qt import QtCore
-from find_triangle import *
+from find_triangle import find_min_dif_square
 import itertools
+import math
+import os
 
 
 EPSILON = 1e-5
@@ -44,6 +46,10 @@ class MainWindow(QMainWindow):
         self.editButton.clicked.connect(self.editPoint)
         layout.addWidget(self.editButton)
 
+        # Создание кнопки для чтения точек с файла
+        self.filereadButton = QPushButton("Прочитать точки из файла")
+        self.filereadButton.clicked.connect(self.readfilePoint)
+        layout.addWidget(self.filereadButton)
         # Создание кнопки для решения задачи
         self.solveButton = QPushButton("Решить задачу")
         self.solveButton.clicked.connect(self.findTriangles)
@@ -56,7 +62,6 @@ class MainWindow(QMainWindow):
         self.points = []
 
         self.graphWidget.scene().sigMouseClicked.connect(self.mouseClickEvent)
-
     def addPoint(self):
         text = self.pointLineEdit.text()
         try:
@@ -110,14 +115,27 @@ class MainWindow(QMainWindow):
             self.points.append((x, y))
             self.updatePlot()
             self.updatePointList()
-
+    def readfilePoint(self):
+        file_name = "data.txt"
+        if not os.path.exists(file_name):
+            QMessageBox.warning(self, "Ошибка!", "Нет файла 'data.txt'")
+            return
+        with open("data.txt", "r") as file:
+            file = file.readlines()
+            for i in range(len(file)):
+                cur = file[i]
+                x, y = cur.split()
+                x = float(x)
+                y = float(y)
+                self.points.append((x, y))
+        self.updatePlot()
+        self.updatePointList()
     def editPoint(self):
         selected_items = self.pointList.selectedItems()
         if not selected_items:
             QMessageBox.warning(self, "Ошибка!", "Вы не выбрали точку!")
             return
         selected_index = self.pointList.row(selected_items[0])
-        selected_point = self.points[selected_index]
 
         text = self.pointLineEdit.text()
         try:
@@ -153,8 +171,6 @@ class MainWindow(QMainWindow):
         triangles = list(itertools.permutations(self.points, 3))
         for i in triangles:
             res = find_min_dif_square(i)
-            if type(res) == complex:
-                continue
             if res < cur:
                 cur = res
                 cur_points = i
@@ -165,13 +181,7 @@ class MainWindow(QMainWindow):
                 x1, y1 = cur_points[i]
                 x2, y2 = cur_points[(i + 1) % 3]
                 self.graphWidget.plot([x1, x2], [y1, y2], pen='g')
-            # Следующие 4 строки - команды для отрисовки бисскектрис. Занимает это продолжительное время (5-10 секунд), поэтому раскоментируйте, если это необходимо.
-            """ 
-            point1, point2, point3 = find_points_in_lines(cur_points)
-            self.graphWidget.plot([cur_points[0][0], float(point1[0][0])], [cur_points[0][1], float(point1[0][1])], pen='r')
-            self.graphWidget.plot([cur_points[1][0], float(point2[0][0])], [cur_points[1][1], float(point2[0][1])], pen='r')
-            self.graphWidget.plot([cur_points[2][0], float(point3[0][0])], [cur_points[2][1], float(point3[0][1])], pen='r')
-            """
+
             QMessageBox.warning(self, "Задача решена!", f"Треугольник, у которого разница площадей минимальна - треугольник в вершинах {cur_points}")
             
 if __name__ == '__main__':
