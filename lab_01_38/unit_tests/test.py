@@ -5,4 +5,5 @@ def check_find_min_dif_square():
     res = find_min_dif_square(points)
     print(res)
 
+
 check_find_min_dif_square()
