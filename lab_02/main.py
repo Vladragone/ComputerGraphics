@@ -13,16 +13,16 @@ class MainWindow(QMainWindow):
         super().__init__()
 
         self.setWindowTitle("График с точками")
-        self.setGeometry(100, 100, 800, 600)
-
-        self.graphWidget = PlotWidget()
+        self.setGeometry(100, 100, 1000, 1000)
         
+        self.graphWidget = PlotWidget()
+        #self.graphWidget.setFixedSize(600, 600)    
         layout = QVBoxLayout()
         layout.addWidget(self.graphWidget)
 
         # Создание поля для переноса
         self.moveEdit = QLineEdit()
-        self.moveEdit.setPlaceholderText("Введите координаты переноса (x,y)")
+        self.moveEdit.setPlaceholderText("Введите координаты для переноса (x,y)")
         layout.addWidget(self.moveEdit)
 
         # Создание кнопки для перенсоа
@@ -32,7 +32,7 @@ class MainWindow(QMainWindow):
 
         # Создание поля для масштабирования
         self.scaleEdit = QLineEdit()
-        self.scaleEdit.setPlaceholderText("Введите коэффицент масштабирования (x,y)")
+        self.scaleEdit.setPlaceholderText("Введите коэффицент масштабирования")
         layout.addWidget(self.scaleEdit)
 
         # Создание кнопки для масштабирования
@@ -42,7 +42,7 @@ class MainWindow(QMainWindow):
 
         # Создание поля для угла поворота
         self.rotateAngleEdit = QLineEdit()
-        self.rotateAngleEdit.setPlaceholderText("Введите угол поворота (x,y)")
+        self.rotateAngleEdit.setPlaceholderText("Введите угол поворота")
         layout.addWidget(self.rotateAngleEdit)
 
         # Создание поля для точки поворота
@@ -72,11 +72,18 @@ class MainWindow(QMainWindow):
         self.downEllipse = [[0, 0], [0, 10], [10, 0]]
         self.upEllipse = [[0, 0], [0, 15], [15, 0]]
 
+        self.upEllipseA = 15
+        self.upEllipseB = 15
+
+        self.downEllipseA = 10
+        self.downEllipseB = 10
+        
         self.circleCenter = [0, 16]
         self.circleRadius = 1
 
+        self.angle = 0
         
-        
+
         self.drawPicture()
 
     def drawPicture(self):
@@ -122,32 +129,33 @@ class MainWindow(QMainWindow):
         rightEllipse = self.downEllipse[2]
         upEllipse = self.downEllipse[1]
         centerEllipse = self.downEllipse[0]
-        
-        a = abs(rightEllipse[0] - centerEllipse[0])
-        b = abs(upEllipse[1] - centerEllipse[1])
-
+        a = self.downEllipseA
+        b = self.downEllipseB
         t = [math.radians(i) for i in range(55, 130, 3)]
-
         x = [centerEllipse[0] + a * math.cos(angle) for angle in t]
         y = [centerEllipse[1] + b * math.sin(angle) for angle in t]
+        mas = list(zip(x,y))
+        mas = [self.rotate(p, centerEllipse, self.angle) for p in mas]
+        x, y = zip(*mas)
         dots = [[x[0], y[0]], [x[-1], y[-1]]]
         self.graphWidget.plot(x, y, pen='r', symbolSize=0, connect='all')
-        
-        x = self.clockCenter[0]
-        y = self.clockCenter[1]
-        r = self.clockRadius
+
         
         rightEllipse = self.upEllipse[2]
         upEllipse = self.upEllipse[1]
         centerEllipse = self.upEllipse[0]
         
-        a = abs(rightEllipse[0] - centerEllipse[0])
-        b = abs(upEllipse[1] - centerEllipse[1])
-
+        a = self.upEllipseA
+        b = self.upEllipseB
         t = [math.radians(i) for i in range(67, 115)]
 
         x = [centerEllipse[0] + a * math.cos(angle) for angle in t]
         y = [centerEllipse[1] + b * math.sin(angle) for angle in t]
+
+        mas = list(zip(x,y))
+        mas = [self.rotate(p, centerEllipse, self.angle) for p in mas]
+        x, y = zip(*mas)
+        
         self.graphWidget.plot(x, y, pen='r', symbolSize=0, connect='all')
 
         new_dots = [[x[0], y[0]], [x[-1], y[-1]]]
@@ -156,15 +164,68 @@ class MainWindow(QMainWindow):
             y = [dot[1], new_dot[1]]
             self.graphWidget.plot(x, y, pen='r')
 
-            
+        min_x = min(self.clockCenter[0], self.circleCenter[0])
+        max_x = max(self.clockCenter[0], self.circleCenter[0])
+        for point in itertools.chain(self.clockArrows, self.clockLegs, self.clockLines, self.downEllipse, self.upEllipse):
+            if isinstance(point[0], list):
+                min_x = min(min_x, min(point[0]))
+                max_x = max(max_x, max(point[0]))
+            else:
+                min_x = min(min_x, point[0])
+                max_x = max(max_x, point[0])
+
+        min_y = min(self.clockCenter[1], self.circleCenter[1])
+        max_y = max(self.clockCenter[1], self.circleCenter[1])
+        for point in itertools.chain(self.clockArrows, self.clockLegs, self.clockLines, self.downEllipse, self.upEllipse):
+            if isinstance(point[1], list):
+                min_y = min(min_y, min(point[1]))
+                max_y = max(max_y, max(point[1]))
+            else:
+                min_y = min(min_y, point[1])
+                max_y = max(max_y, point[1])
+
+        self.graphWidget.setXRange(min_x - self.clockRadius, max_x + self.clockRadius)
+        self.graphWidget.setYRange(min_y - self.clockRadius, max_y + self.clockRadius)
+        
     def movePoint(self):
         text = self.moveEdit.text()
         try:
             x, y = map(float, text.split(','))
         except ValueError:
+            QMessageBox.warning(self, "Ошибка!", "Вы ввели некорректные точки!")
             return
+        self.clockCenter[0] += x
+        self.clockCenter[1] += y
+
         self.circleCenter[0] += x
         self.circleCenter[1] += y
+
+        for arrow in self.clockArrows:
+            arrow[0][0] += x
+            arrow[0][1] += y
+            arrow[1][0] += x
+            arrow[1][1] += y
+
+        for arrow in self.clockLegs:
+            arrow[0][0] += x
+            arrow[0][1] += y
+            arrow[1][0] += x
+            arrow[1][1] += y
+
+        for line in self.clockLines:
+            line[0][0] += x
+            line[0][1] += y
+            line[1][0] += x
+            line[1][1] += y
+
+        for ellipse in [self.downEllipse, self.upEllipse]:
+            ellipse[0][0] += x
+            ellipse[0][1] += y
+            ellipse[1][0] += x
+            ellipse[1][1] += y
+            ellipse[2][0] += x
+            ellipse[2][1] += y       
+        
         self.drawPicture()
 
     def scalePoint(self):
@@ -172,6 +233,7 @@ class MainWindow(QMainWindow):
         try:
             scale_factor = float(text)
         except ValueError:
+            QMessageBox.warning(self, "Ошибка!", "Вы ввели не число!")
             return
         if scale_factor >= 0:
             # Масштабирование центра окружности
@@ -211,6 +273,10 @@ class MainWindow(QMainWindow):
                 ellipse[1][1] *= scale_factor
                 ellipse[2][0] *= scale_factor
                 ellipse[2][1] *= scale_factor
+            self.upEllipseA *= scale_factor
+            self.upEllipseB *= scale_factor
+            self.downEllipseA *= scale_factor
+            self.downEllipseB *= scale_factor
         else:
             scale_factor = - scale_factor
             # Масштабирование центра окружности
@@ -250,50 +316,53 @@ class MainWindow(QMainWindow):
                 ellipse[1][0] /= scale_factor
                 ellipse[1][1] /= scale_factor
                 ellipse[2][0] /= scale_factor
-                ellipse[2][1] /= scale_factor       
+                ellipse[2][1] /= scale_factor
+            self.upEllipseA /= scale_factor
+            self.upEllipseB /= scale_factor
+            self.downEllipseA /= scale_factor
+            self.downEllipseB /= scale_factor
 
         self.drawPicture()
 
     def rotatePoint(self):
-        print("halo")
-        text_angle = self.rotateAngleEdit.text()
-        text_point = self.rotatePointEdit.text()
         try:
-            angle = float(text_angle)
-            point_x, point_y = map(float, text_point.split(','))
-        except ValueError:
+            angle = float(self.rotateAngleEdit.text())
+            point = list(map(int, self.rotatePointEdit.text().split(',')))
+        except:
+            QMessageBox.warning(self, "Ошибка!", "Вы ввели некорректные параметры!")
             return
-
-        # Поворот центра окружности
-        self.circleCenter[0], self.circleCenter[1] = self._rotate_point(self.circleCenter[0], self.circleCenter[1], point_x, point_y, angle)
-
-        # Поворот стрелок часов
+        
+        # Rotate clock hands
         for arrow in self.clockArrows:
-            
-            arrow[0][0], arrow[0][1] = self._rotate_point(arrow[0][0], arrow[0][1], point_x, point_y, angle)
-            arrow[1][0], arrow[1][1] = self._rotate_point(arrow[1][0], arrow[1][1], point_x, point_y, angle)
+            arrow[0], arrow[1] = self.rotate(arrow[0], point, angle), self.rotate(arrow[1], point, angle)
+        
+        # Rotate clock lines
+        for pointer in self.clockLines:
+            pointer[0], pointer[1] = self.rotate(pointer[0], point, angle), self.rotate(pointer[1], point, angle)
+        
+        # Rotate clock legs
+        for legs in self.clockLegs:
+            legs[0], legs[1] = self.rotate(legs[0], point, angle), self.rotate(legs[1], point, angle)
 
-          # Поворот линий часов
-        for line in self.clockLines:
-            line[0][0], line[0][1] = self._rotate_point(line[0][0], line[0][1], point_x, point_y, angle)
-            line[1][0], line[1][1] = self._rotate_point(line[1][0], line[1][1], point_x, point_y, angle)
+        # Rotate ellipses
+        self.downEllipse = [self.rotate(p, point, angle) for p in self.downEllipse]
+        self.upEllipse = [self.rotate(p, point, angle) for p in self.upEllipse]
+        
+        # Rotate circle
+        self.circleCenter = self.rotate(self.circleCenter, point, angle)
 
-        # Поворот нижнего и верхнего эллипсов
-        for ellipse in [self.downEllipse, self.upEllipse]:
-            ellipse[0][0], ellipse[0][1] = self._rotate_point(ellipse[0][0], ellipse[0][1], point_x, point_y, angle)
-            ellipse[1][0], ellipse[1][1] = self._rotate_point(ellipse[1][0], ellipse[1][1], point_x, point_y, angle)
-            ellipse[2][0], ellipse[2][1] = self._rotate_point(ellipse[2][0], ellipse[2][1], point_x, point_y, angle)
-
+        self.clockCenter = self.rotate(self.clockCenter, point, angle)
+        self.angle += angle
+        # Redraw the picture
         self.drawPicture()
 
-    def _rotate_point(self, x, y, point_x, point_y, angle):
-      x -= point_x
-      y -= point_y
-      new_x = x * math.cos(math.radians(angle)) - y * math.sin(math.radians(angle))
-      new_y = x * math.sin(math.radians(angle)) + y * math.cos(math.radians(angle))
-      new_x += point_x
-      new_y += point_y
-      return new_x, new_y
+    def rotate(self, point, origin, angle):
+        ox, oy = origin
+        px, py = point
+        qx = ox + math.cos(math.radians(angle)) * (px - ox) - math.sin(math.radians(angle)) * (py - oy)
+        qy = oy + math.sin(math.radians(angle)) * (px - ox) + math.cos(math.radians(angle)) * (py - oy)
+        return [qx, qy]
+
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
